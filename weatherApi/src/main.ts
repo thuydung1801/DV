@@ -40,8 +40,8 @@ async function bootstrap() {
     app.enableCors();
   }
 
-  await app.listen(process.env.PORT || nestConfig.port || 3000).then(()=>{
-    console.log(`Server is running on port ${process.env.PORT || nestConfig.port || 3000}`)
+  await app.listen(process.env.PORT || nestConfig.port || 5001).then(()=>{
+    console.log(`Server is running on port ${process.env.PORT || nestConfig.port || 5001}`)
   });
 }
 bootstrap();

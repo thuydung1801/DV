@@ -23,7 +23,7 @@
     "docker:build": "docker-compose build"
   },
   "dependencies": {
-    "@nestjs/common": "9.0.5",
+    "@nestjs/common": "^9.0.5",
     "@nestjs/config": "2.2.0",
     "@nestjs/core": "9.0.5",
     "@nestjs/graphql": "10.0.20",
@@ -37,6 +37,8 @@
     "express": "^4.18.2",
     "graphql": "16.5.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.27.0",
+    "mongodb": "^5.3.0",
+    "mongoose": "^7.0.4",
     "reflect-metadata": "0.1.13",
     "rimraf": "3.0.2",
     "rxjs": "7.5.6"
