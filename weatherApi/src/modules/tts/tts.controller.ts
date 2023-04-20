@@ -17,102 +17,149 @@ import { Exclude } from 'class-transformer';
 
 @ApiTags('Weather')
 @Controller('weather')
-
 export class TtsController {
   constructor(private readonly ttsService: TtsService) {}
-  
+
   @Get()
   async getWeathere(@Query('city') city: string): Promise<any> {
-    const mongoose = require('mongoose');
-    mongoose.connect('mongodb://localhost:27017/weatherApi', { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => {
-      console.log('Connected to MongoDB');
-      
-      
-      // Lấy dữ liệu từ API OpenWeather
-      axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=0f6cf13778c3421d801a90ef93fae283`)
-        .then(response => {
+    console.log(city);
+    return new Promise((resolve) => {
+      const mongoose = require('mongoose');
 
-          // Lưu dữ liệu vào MongoDB
-          const Weather = mongoose.model('weather-app', {
-            details:String, 
-            icon: String,
-            lat:String,
-            lon:String,
-            temp: String,
-            feels_like:String,
-            temp_min:String, 
-            temp_max:String, 
-            humidity:String,
-            city: String,
-            dt:String,
-            country:String, 
-            sunrise:String, 
-            sunset:String,
-            weather:String,
-            speed:String,
-            
-          });
-  
-          const weatherData = new Weather({
-            details:response.data.weather[0].description, 
-            icon:response.data.weather[0].icon,
-            lat:response.data.coord.lat,
-            lon:response.data.coord.lon,
-            temp: response.data.main.temp,
-            feels_like:response.data.main.feels_like,
-            temp_min:response.data.main.temp_min, 
-            temp_max:response.data.main.temp_max, 
-            humidity:response.data.main.humidity,
-            city: response.data.name,
-            dt:response.data.dt,
-            country:response.data.sys.country, 
-            sunrise:response.data.sys.sunrise, 
-            sunset:response.data.sys.sunset,
-            weather:response.data.weather,
-            speed:response.data.wind.speed,
-            
-          });
-         
-          weatherData.save()
-            .then(() => console.log('Data saved to MongoDB'))
-            .catch(err => console.log(err))
-            .finally(() => mongoose.disconnect());
+      const Schema = mongoose.Schema;
+      const weatherSchema = new Schema({
+        coord:Object,
+        weather: Array,
+        base: String,
+        main:Object,
+        visibility: String,
+        wind: Object,
+        rain: Object,
+        clouds: Object,
+        dt: String,
+        sys:Object,
+        timezone:String,
+        id:String,
+        name:String,
+        cod: String,
+      });
+
+      mongoose
+        .connect('mongodb://localhost:27017/weatherApi', {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
         })
-        .catch(err => console.log(err));
-    })
-    .catch(err => console.log(err));
+        .then(async () => {
+          console.log('Connected to MongoDB');
 
+          if (!mongoose.models['weathers']) {
+            mongoose.model('weathers', weatherSchema);
+          }
+          // Find record
+          const record = await mongoose.model('weathers').find({
+            city: { $regex: city, $options: 'i' },
+          });
+          console.log('record', record);
+
+          if (record && Array.isArray(record) && record.length > 0) {
+            resolve(record);
+            // console.log("Find new data====")
+            return;
+          }
+
+          console.log('Find new data');
+
+          // Lấy dữ liệu từ API OpenWeather
+          axios
+            .get(
+              `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=1fa9ff4126d95b8db54f3897a208e91c`
+            )
+            .then((response) => {
+              // Lưu dữ liệu vào MongoDB
+              // if(!mongoose.models['weathers']){
+              //    mongoose.model('weathers', weatherSchema );
+              // }
+              const Weather = mongoose.model('weathers');
+              const weatherData = new Weather({
+                // details: response.data.weather[0].description,
+                // icon: response.data.weather[0].icon,
+                // lat: response.data.coord.lat,
+                // lon: response.data.coord.lon,
+                // temp: response.data.main.temp,
+                // feels_like: response.data.main.feels_like,
+                // temp_min: response.data.main.temp_min,
+                // temp_max: response.data.main.temp_max,
+                // humidity: response.data.main.humidity,
+                // city: response.data.name,
+                // dt: response.data.dt,
+                // country: response.data.sys.country,
+                // sunrise: response.data.sys.sunrise,
+                // sunset: response.data.sys.sunset,
+                // weather: response.data.weather,
+                // speed: response.data.wind.speed,
+
+                coord:response.data.coord,
+                weather: response.data.weather,
+                base: response.data.base,
+                main:response.data.main,
+                visibility: response.data.visibility,
+                wind: response.data.wind,
+                rain: response.data.rain,
+                clouds: response.data.clouds,
+                dt: response.data.dt,
+                sys:response.data.sys,
+                timezone:response.data.timezone,
+                id:response.data.id,
+                name:response.data.name,
+                cod: response.data.cod,
+              });
+              console.log(Weather);
+              console.log('=======');
+              console.log(weatherData);
+
+              weatherData
+                .save()
+                .then(() => console.log('Data saved to MongoDB'))
+                .catch((err) => console.log(err))
+                .finally(() => mongoose.disconnect());
+
+              resolve(response.data);
+            })
+            .catch((err) => console.log(err));
+        })
+        .catch((err) => console.log(err));
+    });
+
+    // return ;
   }
 
+  // @Get('/weather')
+  // async getWeather(@Query('city') city: string): Promise<any> {
+  //   try {
+  //     // Gửi yêu cầu lấy dữ liệu từ OpenWeather API
+  //     const response = await axios.get(
+  //       `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=0f6cf13778c3421d801a90ef93fae283`,
+  //     );
+  //     const weatherData = response.data;
+  //     const {MongoClient} = require('mongodb');
+  //     // Kết nối đến MongoDB và lưu dữ liệu vào collection 'weather'
+  //     const client = await MongoClient.connect('mongodb://localhost:27017', {
+  //       useNewUrlParser: true,
+  //       useUnifiedTopology: true,
+  //     });
+  //     const db = client.db('weatherApi');
+  //     const collection = db.collection('weather');
+  //     await collection.insertOne(weatherData);
 
-// @Get('/weather')
-// async getWeather(@Query('city') city: string): Promise<any> {
-//   try {
-//     // Gửi yêu cầu lấy dữ liệu từ OpenWeather API
-//     const response = await axios.get(
-//       `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=0f6cf13778c3421d801a90ef93fae283`,
-//     );
-//     const weatherData = response.data;
-//     const {MongoClient} = require('mongodb');
-//     // Kết nối đến MongoDB và lưu dữ liệu vào collection 'weather'
-//     const client = await MongoClient.connect('mongodb://localhost:27017', {
-//       useNewUrlParser: true,
-//       useUnifiedTopology: true,
-//     });
-//     const db = client.db('weatherApi');
-//     const collection = db.collection('weather');
-//     await collection.insertOne(weatherData);
+  //     // Đóng kết nối đến MongoDB
+  //     await client.close();
 
-//     // Đóng kết nối đến MongoDB
-//     await client.close();
-
-//     return weatherData;
-//   } catch (error) {
-//     console.log(error);
-//     // throw new InternalServerErrorException();
-//   }
-// }
+  //     return weatherData;
+  //   } catch (error) {
+  //     console.log(error);
+  //     // throw new InternalServerErrorException();
+  //   }
+  // }
 
   // @Get('/des')
   // async getWeatherDetail(@Query('lat') lat: string, @Query('lon') lon: string, @Query('exclude') exclude: string,@Query('units') units: string): Promise<any> {
@@ -132,10 +179,10 @@ export class TtsController {
   //   const db = client.db('weatherApi');
   //   const collection = db.collection('weather');
   //   await collection.insertOne(weatherData);
-   
+
   //      // Đóng kết nối đến MongoDB
   //   await client.close();
-   
+
   //   return weatherData;
   // } catch (error) {
   //   console.log(error);
@@ -144,43 +191,85 @@ export class TtsController {
   // }
 
   @Get('/des')
-  async getDetail(@Query('lat') lat: string, @Query('lon') lon: string, @Query('exclude') exclude: string,@Query('units') units: string): Promise<any> {
+  async getDetail(
+    @Query('lat') lat: string,
+    @Query('lon') lon: string,
+    @Query('exclude') exclude: string,
+    @Query('units') units: string
+  ): Promise<any> {
+    return new Promise((resolve) => {
     const mongoose = require('mongoose');
-    mongoose.connect('mongodb://localhost:27017/weatherApi', { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => {
-      console.log('Connected to MongoDB');
+    const Schema = mongoose.Schema;
+    const weatherDetailSchema = new Schema({
+        lat:String,
+        lon:String,
+        timezone: String,
+        timezone_offset:String,
+        daily: Array,
+        
+      });
+    mongoose
+      .connect('mongodb://localhost:27017/weatherApi', {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
+      .then(async() => {
+        console.log('Connected to MongoDB');
+        // Lưu dữ liệu vào MongoDB
+        if (!mongoose.models['weatherdetails']) {
       
-      // Lấy dữ liệu từ API OpenWeather
-      axios.get(
-        `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=${exclude}&units=${units}&appid=1fa9ff4126d95b8db54f3897a208e91c`
-      )
-        .then(response => {
+          mongoose.model('weatherdetails', weatherDetailSchema);
+        }
 
-          // Lưu dữ liệu vào MongoDB
-          const Weather = mongoose.model('weatherDetail', {
-            timezone:String, 
-            daily: Array,
-            hourly:Array,
-            
-          });
-  
-          const weatherData = new Weather({
-            timezone:response.data.timezone, 
-            daily: response.data.daily,
-            hourly:response.data.daily,
-            
-          });
-         
-          weatherData.save()
-            .then(() => console.log('Data saved to MongoDB'))
-            .catch(err => console.log(err))
-            .finally(() => mongoose.disconnect());
-        })
-        .catch(err => console.log(err));
-    })
-    .catch(err => console.log(err));
+        // Find record
+        // const record = await mongoose.model('weatherdetails').find({
+        //   lat: { $regex: lat, $options: 'i' },
+        //   lon: { $regex: lon, $options: 'i' },
+        // });
+        // console.log('record', record);
 
+        // if (record && Array.isArray(record) && record.length > 1) {
+        //   resolve(record);
+        //   // console.log("Find new data====")
+        //   return;
+        // }
+        // console.log('Find new data');
+
+        // Lấy dữ liệu từ API OpenWeather
+        axios
+          .get(
+            `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=${exclude}&units=${units}&appid=1fa9ff4126d95b8db54f3897a208e91c`
+          )
+          .then((response) => {
+            // if (!mongoose.models['weatherdetails']) {
+            //   // Lưu dữ liệu vào MongoDB
+            //   const Weather = mongoose.model('weatherdetails', weatherDetailSchema);
+            // }
+            const Weather = mongoose.model('weatherdetails');
+            const weatherData = new Weather({
+              lat:response.data.lat,
+              lon:response.data.lon,
+              timezone: response.data.timezone,
+              timezone_offset:response.data.timezone_offset,
+              daily: response.data.daily,
+              
+            });
+            console.log(Weather);
+            console.log('=======');
+            console.log(weatherData);
+
+            weatherData
+              .save()
+              .then(() => console.log('Data saved to MongoDB'))
+              .catch((err) => console.log(err))
+              .finally(() => mongoose.disconnect());
+            resolve(response.data);  
+          })
+          
+          .catch((err) => console.log(err));
+      })
+      .catch((err) => console.log(err));
+    });
   }
+
 }
-
-

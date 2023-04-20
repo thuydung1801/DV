@@ -8,8 +8,8 @@ import {
     UilSun,
     UilSunset,
 } from "@iconscout/react-unicons";
-import { formatToLocalTime, iconUrlFromCode } from '../services/weatherService';
-
+//import { formatToLocalTime, iconUrlFromCode } from '../services/weatherService';
+import { formatToLocalTime, iconUrlFromCode } from '../services/demo';
 function TemperatureAndDetails({weather: {
     details, icon,temp, temp_min, temp_max, sunrise, sunset, speed,
     humidity, feels_like, timezone,
@@ -51,7 +51,7 @@ function TemperatureAndDetails({weather: {
         <UilSun/>
         <p className='font-light'>
             Rise:{" "} 
-            <span className='font-medium ml-1'>{formatToLocalTime(sunrise, timezone, 'hh:mm a')}</span>
+            <span className='font-medium ml-1'>{formatToLocalTime(sunset, timezone, 'hh:mm a')}</span>
         </p>
         <p className='font-light'>|</p>
 

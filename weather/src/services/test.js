@@ -20,3 +20,5 @@ axios.get('https://api.openweathermap.org/data/2.5/weather?q=Hanoi&appid=0f6cf13
   .catch(error => {
     console.log(error);
   });
+
+  
