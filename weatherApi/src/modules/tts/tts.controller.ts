@@ -14,15 +14,20 @@ import { UpdateTtDto } from './dto/update-tt.dto';
 import { ApiTags } from '@nestjs/swagger';
 import axios from 'axios';
 import { Exclude } from 'class-transformer';
+import { url } from 'inspector';
 
 @ApiTags('Weather')
 @Controller('weather')
 export class TtsController {
   constructor(private readonly ttsService: TtsService) {}
 
-  @Get()
-  async getWeathere(@Query('city') city: string): Promise<any> {
-    console.log(city);
+  @Get('/city')
+  async getWeathere(@Query() q ): Promise<any> {
+    console.log(q);
+    // console.log(city);
+    // console.log("lat === ", lat);
+    // console.log("lon === ",lon);
+    // console.log(units);
     return new Promise((resolve) => {
       const mongoose = require('mongoose');
 
@@ -56,24 +61,37 @@ export class TtsController {
             mongoose.model('weathers', weatherSchema);
           }
           // Find record
-          const record = await mongoose.model('weathers').find({
-            city: { $regex: city, $options: 'i' },
-          });
-          console.log('record', record);
-
-          if (record && Array.isArray(record) && record.length > 0) {
-            resolve(record);
-            // console.log("Find new data====")
-            return;
+          // const regexCity = new RegExp(city, 'i');
+          // if(q.city){
+          //   const record = await mongoose.model('weathers').find({
+          //       name: { $regex: q.city, $options: 'i' },
+          //     // city : new RegExp("city"),
+          //     // city : regexCity
+          //   });
+          //   console.log('record', record);
+  
+          //   if (record && Array.isArray(record) && record.length > 0) {
+          //     resolve(record);
+          //     // console.log("Find new data====")
+          //     return;
+          //   }
+          // }
+          
+          let url;
+          console.log('Find new data');
+          if(q.city){
+            url =  `https://api.openweathermap.org/data/2.5/weather?units=${q.units}&q=${q.city}&lat=${q.lat}&lon=${q.lon}&appid=1fa9ff4126d95b8db54f3897a208e91c`
+          }
+          else{
+             url =  `https://api.openweathermap.org/data/2.5/weather?units=${q.units}&lat=${q.lat}&lon=${q.lon}&appid=1fa9ff4126d95b8db54f3897a208e91c`
           }
 
-          console.log('Find new data');
-
           // Lấy dữ liệu từ API OpenWeather
+          
           axios
-            .get(
-              `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=1fa9ff4126d95b8db54f3897a208e91c`
-            )
+            .get( url
+              // `https://api.openweathermap.org/data/2.5/weather?units=${q.units}&q=${q.city}&lat=${q.lat}&lon=${q.lon}&appid=1fa9ff4126d95b8db54f3897a208e91c`
+              )
             .then((response) => {
               // Lưu dữ liệu vào MongoDB
               // if(!mongoose.models['weathers']){
@@ -81,22 +99,6 @@ export class TtsController {
               // }
               const Weather = mongoose.model('weathers');
               const weatherData = new Weather({
-                // details: response.data.weather[0].description,
-                // icon: response.data.weather[0].icon,
-                // lat: response.data.coord.lat,
-                // lon: response.data.coord.lon,
-                // temp: response.data.main.temp,
-                // feels_like: response.data.main.feels_like,
-                // temp_min: response.data.main.temp_min,
-                // temp_max: response.data.main.temp_max,
-                // humidity: response.data.main.humidity,
-                // city: response.data.name,
-                // dt: response.data.dt,
-                // country: response.data.sys.country,
-                // sunrise: response.data.sys.sunrise,
-                // sunset: response.data.sys.sunset,
-                // weather: response.data.weather,
-                // speed: response.data.wind.speed,
 
                 coord:response.data.coord,
                 weather: response.data.weather,
@@ -117,13 +119,16 @@ export class TtsController {
               console.log('=======');
               console.log(weatherData);
 
-              weatherData
+                weatherData
                 .save()
                 .then(() => console.log('Data saved to MongoDB'))
                 .catch((err) => console.log(err))
                 .finally(() => mongoose.disconnect());
 
               resolve(response.data);
+              
+
+              
             })
             .catch((err) => console.log(err));
         })
@@ -188,6 +193,108 @@ export class TtsController {
   //   console.log(error);
   //   // throw new InternalServerErrorException();
   // }
+  // }
+
+  // @Get('/location')
+  // async getWeathereLocaltion(@Query() q): Promise<any> {
+  //   // console.log(lat);
+  //   // console.log(lon);
+  //   // console.log(units);
+  //   return new Promise((resolve) => {
+  //     const mongoose = require('mongoose');
+
+  //     const Schema = mongoose.Schema;
+  //     const weatherSchema = new Schema({
+  //       coord:Object,
+  //       weather: Array,
+  //       base: String,
+  //       main:Object,
+  //       visibility: String,
+  //       wind: Object,
+  //       rain: Object,
+  //       clouds: Object,
+  //       dt: String,
+  //       sys:Object,
+  //       timezone:String,
+  //       id:String,
+  //       name:String,
+  //       cod: String,
+  //     });
+
+  //     mongoose
+  //       .connect('mongodb://localhost:27017/weatherApi', {
+  //         useNewUrlParser: true,
+  //         useUnifiedTopology: true,
+  //       })
+  //       .then(async () => {
+  //         console.log('Connected to MongoDB');
+
+  //         if (!mongoose.models['weatherLocation']) {
+  //           mongoose.model('weatherLocation', weatherSchema);
+  //         }
+  //         // Find record
+  //         // const regexCity = new RegExp(city, 'i');
+  //         // const record = await mongoose.model('weathers').find({
+  //         //   city: { $regex: city, $options: 'i' },
+  //         //   // city : new RegExp("city"),
+  //         //   // city : regexCity
+  //         // });
+  //         // console.log('record', record);
+
+  //         // if (record && Array.isArray(record) && record.length > 0) {
+  //         //   resolve(record);
+  //         //   // console.log("Find new data====")
+  //         //   return;
+  //         // }
+
+  //         // console.log('Find new data');
+
+  //         // Lấy dữ liệu từ API OpenWeather
+  //         axios
+  //           .get(
+  //             `https://api.openweathermap.org/data/2.5/weather?lat=${q.lat}&lon=${q.lon}&units=${q.units}&appid=1fa9ff4126d95b8db54f3897a208e91c`
+  //           )
+  //           .then((response) => {
+  //             // Lưu dữ liệu vào MongoDB
+  //             // if(!mongoose.models['weathers']){
+  //             //    mongoose.model('weathers', weatherSchema );
+  //             // }
+  //             const Weather = mongoose.model('weatherLocation');
+  //             const weatherData = new Weather({
+
+  //               coord:response.data.coord,
+  //               weather: response.data.weather,
+  //               base: response.data.base,
+  //               main:response.data.main,
+  //               visibility: response.data.visibility,
+  //               wind: response.data.wind,
+  //               rain: response.data.rain,
+  //               clouds: response.data.clouds,
+  //               dt: response.data.dt,
+  //               sys:response.data.sys,
+  //               timezone:response.data.timezone,
+  //               id:response.data.id,
+  //               name:response.data.name,
+  //               cod: response.data.cod,
+  //             });
+  //             console.log(Weather);
+  //             console.log('=======');
+  //             console.log(weatherData);
+
+  //             weatherData
+  //               .save()
+  //               .then(() => console.log('Data saved to MongoDB'))
+  //               .catch((err) => console.log(err))
+  //               .finally(() => mongoose.disconnect());
+
+  //             resolve(response.data);
+  //           })
+  //           .catch((err) => console.log(err));
+  //       })
+  //       .catch((err) => console.log(err));
+  //   });
+
+  //   // return ;
   // }
 
   @Get('/des')

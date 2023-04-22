@@ -8,27 +8,37 @@ import TemperatureAndDetails from './components/TemperatureAndDetails';
 import Forecast from './components/Forecast';
 // import getFormattedWeatherData from './services/weatherService';
 import getFormattedWeatherData from './services/demo';
+import getFormattedWeatherData2 from './services/demo';
 import {useEffect, useState} from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
 
-  const [query, setQuery] = useState({q: "berlin"});
+  const [query, setQuery] = useState({city: "berlin"});
+  // const [qureryLocation, setQueryLoaction] = useState({lat: "", lon:""});
   const [units, setUnits] = useState("metric");
   const [weather, setWeather] = useState(null);
 
   useEffect(() => {
     const fetchWeather = async ()=>{
-      const message = query.q ? query.q : 'current location.'
+      const message = query.city ? query.city : 'current location.'
 
       toast.info('Fetching weather for ' + message)
-      await getFormattedWeatherData({...query, units}).then(
+      // if( lat.equals(""))
+      await getFormattedWeatherData({...query,units }).then(
         (data) =>{
 
           toast.success(`Successfully fetched weather for ${data.name}, ${data.country}.`);
           setWeather(data);
         });
+
+      // await getFormattedWeatherData2({...qureryLocation,units }).then(
+      //   (data) =>{
+  
+      //     toast.success(`Successfully fetched weather for ${data.name}, ${data.country}.`);
+      //     setWeather(data);
+      //   });
   
     };
 
@@ -41,13 +51,16 @@ const formatBackground = () =>{
   if(weather.temp <= threshold) return 'from-cyan-700 to-blue-700';
   return 'from-yellow-700 to-orange-700';
 }
+// useEffect(()=>{
 
-  // const fetchWeather = async ()=>{
-  //   const data = await getFormattedWeatherData({q: "london"});
+//   const fetchWeather = async ()=>{
+//     const data = await getFormattedWeatherData({city: "london"});
+//     setWeather(data)
   
-  //   console.log(data);
-  // }
-  // fetchWeather();
+//     console.log("Fetch weather",data);
+//   }
+//   fetchWeather();
+// },[])
   return (
     <div className={`mx-auto max-w-screen-md mt-4 py-5 px-32 bg-gradient-to-br h-fit shadow-xl 
     shadow-gray-400 ${formatBackground()}`}>
@@ -57,8 +70,8 @@ const formatBackground = () =>{
       {weather && (
         <div>
           <TimeAndLocation weather={weather}/>
-          <TemperatureAndDetails weather={weather} />
-          <Forecast title="hourly forecast" items={weather.hourly}/>
+          <TemperatureAndDetails weather={weather}  />
+          <Forecast title="hourly forecast" items={weather.hourly} />
           <Forecast title="daily forecast" items={weather.daily}/>
         </div> 
        )}

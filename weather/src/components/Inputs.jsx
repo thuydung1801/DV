@@ -13,7 +13,7 @@ function Inputs({setQuery, units, setUnits}) {
   };
 
   const handleSearchClick = () => {
-    if(city !== "") setQuery({q: city})
+    if(city !== "") setQuery({city: city})
   };
 
   const handleLocationClick = () =>{
@@ -25,14 +25,41 @@ function Inputs({setQuery, units, setUnits}) {
         toast.success("Location fetched.!")
         let lat = position.coords.latitude
         let lon = position.coords.longitude
-
+         
         setQuery({
           lat,
           lon,
+        
         });
       });
     }
   };
+
+  // const handleLocationClick = () =>{
+  //   if(navigator.geolocation){
+  
+  //     toast.info('Fetching users location.')
+  //     navigator.geolocation.getCurrentPosition((position) => {
+  
+  //       toast.success("Location fetched.!")
+  //       let lat = position.coords.latitude
+  //       let lon = position.coords.longitude
+  //       // let  exclude= "current,minutely,alerts"
+  //       // let units = "metric"
+        
+  //       // Call weather API
+  //       fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=1fa9ff4126d95b8db54f3897a208e91c`)
+  //         .then(response => response.json())
+  //         .then(data => {
+  //           console.log(data);
+  //           // do something with the weather data, such as update state or display it to the user
+  //         })
+  //         .catch(error => console.error(error));
+  
+  //     });
+  //   }
+  // };
+  
   return (
     <div className='flex flex-row justify-center my-6'>
         
